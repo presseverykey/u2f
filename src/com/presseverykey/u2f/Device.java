@@ -1,0 +1,264 @@
+package com.presseverykey.u2f;
+
+import java.security.KeyPair;
+import java.security.PrivateKey;
+
+/**
+ * Created by a2800276 on 2015-10-29.
+ */
+public abstract class Device {
+    /**
+     * Respond to an APDU as described in:
+     * https://fidoalliance.org/specs/fido-u2f-v1.0-nfc-bt-amendment-20150514/fido-u2f-raw-message-formats.html
+     *
+     * @param apduBytes
+     * @return
+     */
+    public byte[] handleAPDU(byte[] apduBytes) {
+        return handleAPDU(APDU.scan(apduBytes));
+    }
+
+    public byte[] handleAPDU(APDU apdu) {
+        switch (apdu.cla) {
+            case Constants.U2F_CLASS:
+                break;
+            default:
+                return Constants.U2F_SW_COMMAND_NOT_ALLOWED;
+        }
+        switch (apdu.ins) {
+            case Constants.U2F_REGISTER:
+                return handleU2FRegister(apdu);
+            case Constants.U2F_AUTHENTICATE:
+                return handleU2FAuthenticate(apdu);
+            case Constants.U2F_VERSION:
+                return handleU2FVersion(apdu);
+            default:
+                return Constants.U2F_SW_INS_NOT_SUPPORTED;
+
+        }
+    }
+
+    private byte[] handleU2FVersion(APDU apdu) {
+        if (apdu.p1 != 0x00 || apdu.p2 != 0x00) {
+            return Constants.U2F_SW_COMMAND_NOT_ALLOWED;
+        }
+        return apduResponse(Constants.U2F_VERSION_BYTES, Constants.U2F_SW_NO_ERROR);
+    }
+
+    private byte[] handleU2FRegister(APDU apdu) {
+        if (apdu.p1 != 0x00 || apdu.p2 != 0x00) {
+            return Constants.U2F_SW_COMMAND_NOT_ALLOWED;
+        }
+        if (apdu.payload.length != 64) {
+            return Constants.U2F_SW_WRONG_DATA;
+        }
+        if (!testUserPresence()) {
+            return Constants.U2F_SW_CONDITIONS_NOT_SATISFIED;
+        }
+        U2F.RegistrationRequestMessage req = new U2F.RegistrationRequestMessage(apdu.payload);
+        U2F.RegistrationResponseMessage resp = generateRegistrationResponse(req);
+        return apduResponse(resp.toBytes(), Constants.U2F_SW_NO_ERROR);
+    }
+
+    public U2F.RegistrationResponseMessage generateRegistrationResponse(U2F.RegistrationRequestMessage req) {
+        KeyPair pair = generateKeyPair();
+        byte[] keyhandle = generateKeyHandle(pair);
+        storeKeyForApplicationAndHandle(pair, req.getApplicationParameter(), keyhandle);
+        U2F.RegistrationResponseMessage response = new U2F.RegistrationResponseMessage();
+
+        response.setUserPK(pair.getPublic().getEncoded());
+        response.setKeyHandle(keyhandle);
+        response.setAttestationCert(attestationCertificateX509Bytes());
+
+        byte[] signData = signatureDataRegistration(
+                req.getApplicationParameter(),
+                req.getChallengeParameter(),
+                keyhandle,
+                response.getUserPK()
+        );
+        response.setSignature(Util.sign(attestationPrivateKey(), signData));
+
+        return response;
+    }
+
+    private byte[] signatureDataRegistration(
+            byte[] applicationParameter,
+            byte[] challengeParameter,
+            byte[] keyhandle,
+            byte[] userPK
+    ) {
+        int len = 1 + 32 + 32 + keyhandle.length + userPK.length;
+        byte[] bytes = new byte[len];
+        int pos = 0;
+        bytes[pos++] = 0;
+        System.arraycopy(applicationParameter, 0, bytes, pos, 32);
+        pos += 32;
+        System.arraycopy(challengeParameter, 0, bytes, pos, 32);
+        pos += 32;
+        System.arraycopy(keyhandle, 0, bytes, pos, keyhandle.length);
+        pos += keyhandle.length;
+        System.arraycopy(userPK, 0, bytes, pos, userPK.length);
+        return bytes;
+    }
+
+    /**
+     * In case the concrete implementation wraps the PK in the keyhandle (see
+     * Fido Raw Messages §4.3) this method may be implemented to generate the
+     * wrapped value to use as keyhandle. Otherwise, the keyHandle is an opaque
+     * byte value used as a lookup.
+     *
+     * @param pair
+     * @return
+     */
+    protected abstract byte[] generateKeyHandle(KeyPair pair);
+
+    /**
+     * Return the private key used to sign Registration Responses
+     *
+     * @return
+     */
+    protected abstract PrivateKey attestationPrivateKey();
+
+    /**
+     * Return the X509 representation of the Attestation Certificate used
+     * in RegistrationResponse messages.
+     *
+     * @return
+     */
+    protected abstract byte[] attestationCertificateX509Bytes();
+
+    /**
+     * Associate the user key pair with the application and keyhandle parameters and persist the key.
+     * In case this is a wrapped key (key wrapped within the keyhandle) this may
+     * not be necessary to save the key, depending on implementation, it may still be usefull to take note of the
+     * association.
+     *
+     * @param pair
+     * @param applicationParameter
+     * @param keyhandle
+     */
+
+    protected abstract void storeKeyForApplicationAndHandle(KeyPair pair, byte[] applicationParameter, byte[] keyhandle);
+
+    /**
+     * Generate a P-256 Keypair. Assume this keypair will be used as the user key.
+     *
+     * @return
+     */
+    protected abstract KeyPair generateKeyPair();
+
+
+    private byte[] handleU2FAuthenticate(APDU apdu) {
+        if (apdu.p2 != 0x00) {
+            return Constants.U2F_SW_COMMAND_NOT_ALLOWED;
+        }
+        U2F.AuthenticationRequestMessage req = new U2F.AuthenticationRequestMessage(apdu.payload);
+        switch (apdu.p1) {
+            case Constants.U2F_AUTH_CHECK_ONLY:
+                if (hasKeyForApplicationAndHandle(req)) {
+                    return Constants.U2F_SW_CONDITIONS_NOT_SATISFIED;
+                } else {
+                    return Constants.U2F_SW_WRONG_DATA;
+                }
+            case Constants.U2F_AUTH_ENFORCE:
+                if (!testUserPresence()) {
+                    return Constants.U2F_SW_CONDITIONS_NOT_SATISFIED;
+                }
+                if (!hasKeyForApplicationAndHandle(req)) {
+                    return Constants.U2F_SW_WRONG_DATA;
+                }
+                U2F.AuthenticationResponseMessage resp = generateAuthenticationResponse(req);
+                return apduResponse(resp.toBytes(), Constants.U2F_SW_NO_ERROR);
+            default:
+                return Constants.U2F_SW_COMMAND_NOT_ALLOWED;
+        }
+    }
+
+    /**
+     * check whether this device has a key for the indicated application parameter and keyHandle available.
+     */
+    protected abstract boolean hasKeyForApplicationAndHandle(U2F.AuthenticationRequestMessage req);
+
+    public U2F.AuthenticationResponseMessage generateAuthenticationResponse(U2F.AuthenticationRequestMessage req)
+            throws U2F.U2FNoKeyException, U2F.U2FUserPresenceException {
+        if (!hasKeyForApplicationAndHandle(req)) {
+            throw new U2F.U2FNoKeyException();
+        }
+        if (!testUserPresence()) {
+            throw new U2F.U2FUserPresenceException();
+        }
+
+        U2F.AuthenticationResponseMessage resp = new U2F.AuthenticationResponseMessage();
+        resp.userPresence = 0x01;
+        resp.counter = getCounterBytes(req.getApplicationParameter(), req.getKeyHandle());
+
+        byte[] signatureData = signatureDataAuthentication(
+                req.getApplicationParameter(),
+                resp.userPresence,
+                resp.counter,
+                req.getChallengeParameter()
+        );
+
+        resp.signature = Util.sign(userPrivateKey(req), signatureData);
+
+
+        return resp;
+    }
+
+    protected byte[] getCounterBytes(byte[] applicationParameter, byte[] keyHandle) {
+        long counter = getCounter(applicationParameter, keyHandle);
+
+        byte[] bytes = new byte[4];
+        bytes[0] = (byte) (counter >> 24);
+        bytes[1] = (byte) ((counter >> 16) & 0xff);
+        bytes[2] = (byte) ((counter >> 8) & 0xff);
+        bytes[3] = (byte) (counter & 0xff);
+
+        return bytes;
+    }
+
+
+    protected abstract PrivateKey userPrivateKey(U2F.AuthenticationRequestMessage req);
+
+    private byte[] signatureDataAuthentication(
+            byte[] applicationParameter,
+            byte userPresence,
+            byte[] counter,
+            byte[] challengeParameter
+    ) {
+        int len = 32 + 1 + 4 + 32;
+        byte[] bytes = new byte[len];
+        int pos = 0;
+        System.arraycopy(applicationParameter, 0, bytes, pos, 32);
+        pos += 32;
+        bytes[pos++] = userPresence;
+        System.arraycopy(counter, 0, bytes, pos, 4);
+        pos += 4;
+        System.arraycopy(challengeParameter, 0, bytes, pos, 32);
+        return bytes;
+    }
+
+    protected abstract long getCounter(byte[] applicationParameter, byte[] keyHandle);
+
+
+    /**
+     * Implement this to test for user presence,
+     * if the device does not require user presence testing, implment to return true.
+     *
+     * @return true if user presence was determined
+     */
+    protected abstract boolean testUserPresence();
+
+
+    private static byte[] apduResponse(byte[] data, byte[] sw12) {
+        if (sw12.length != 2) {
+            throw new APDU.APDUException("incorret sw12 length");
+        }
+        byte[] resp = new byte[data.length + 2];
+        System.arraycopy(data, 0, resp, 0, data.length);
+        System.arraycopy(sw12, 0, resp, data.length, 2);
+        return resp;
+    }
+
+
+}
