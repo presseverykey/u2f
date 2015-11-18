@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$USER_HOME$/projects/java/u2f/u2f.iml" filepath="$USER_HOME$/projects/java/u2f/u2f.iml" />
+      <module fileurl="file://$PROJECT_DIR$/u2f.iml" filepath="$PROJECT_DIR$/u2f.iml" />
     </modules>
   </component>
 </project>

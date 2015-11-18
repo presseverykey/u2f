@@ -3,13 +3,14 @@ package com.presseverykey.u2f.example;
 import com.presseverykey.u2f.Device;
 import com.presseverykey.u2f.U2F;
 
-import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.PrivateKey;
-import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.HashMap;
 
-import static com.presseverykey.u2f.Util.*;
+import static com.presseverykey.u2f.Util.p;
+import static de.kuriositaet.util.crypto.Hash.sha256;
+import static de.kuriositaet.util.crypto.Random.random;
+import static de.kuriositaet.util.crypto.Util.b2h;
 
 /**
  * Created by a2800276 on 2015-10-30.
@@ -35,14 +36,8 @@ public class SimpleMemoryBasedDevice extends SimpleDevice {
 
     @Override
     protected PrivateKey attestationPrivateKey() {
-        try {
-            byte[] pkBytes = Base64.decode(ATTESTATION_PK);
-            KeyFactory keyFactory = KeyFactory.getInstance("EC");
-            PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(pkBytes);
-            return keyFactory.generatePrivate(keySpec);
-        } catch (Throwable t) {
-            throw new RuntimeException(t);
-        }
+        byte[] pkBytes = Base64.decode(ATTESTATION_PK);
+        return de.kuriositaet.util.crypto.KeyPair.PrivateKey.loadPKCS8(pkBytes).getJCAPrivateKey();
     }
 
     private static final String ATTESTATION_CERT_X509_B64 = "MIICBTCCAamgAwIBAgIEcHKfOzAMBggqhkjOPQQDAgUAMHcxCzAJBgNVBAYTAkRFMQwwCgYDVQQIEwNOUlcxDjAMBgNVBAcTBUtvZWxuMRswGQYDVQQKExJQcmVzcyBFdmVyeSBLZXkgVUcxGDAWBgNVBAsTD1RlY2huaWNhbCBTdGFmZjETMBEGA1UEAxMKVGltIEJlY2tlcjAeFw0xNTEwMjkyMjI5MjZaFw0xNjAxMjcyMjI5MjZaMHcxCzAJBgNVBAYTAkRFMQwwCgYDVQQIEwNOUlcxDjAMBgNVBAcTBUtvZWxuMRswGQYDVQQKExJQcmVzcyBFdmVyeSBLZXkgVUcxGDAWBgNVBAsTD1RlY2huaWNhbCBTdGFmZjETMBEGA1UEAxMKVGltIEJlY2tlcjBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABGwjwmlUzwcNi2Acpw8+VHl2xpJ8pwaQAqGV3hOBG94PryngxqVGXzRuq2vIiOqgeMGTVNhHm+4WvLD7ScclrnWjITAfMB0GA1UdDgQWBBRQRvI1usBfwqofbUxwtapBcF5rjzAMBggqhkjOPQQDAgUAA0gAMEUCIQCYygGTgIqRnCNXigPqOb+xDIZrfkTNU34yQAV/KOdXywIgVNg7hGvjQ1abSqtSf4IuCCz3bPp4jcvfCAmrey48wkc=";
@@ -87,7 +82,7 @@ public class SimpleMemoryBasedDevice extends SimpleDevice {
     }
 
     String alias(byte[] applicationParameter, byte[] keyHandle) {
-        return bytes2Hex(sha256(applicationParameter, keyHandle));
+        return b2h(sha256(applicationParameter, keyHandle));
     }
 
     String alias(U2F.AuthenticationRequestMessage req) {

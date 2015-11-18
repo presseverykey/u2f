@@ -39,11 +39,4 @@ public class Constants {
     public static final byte[] U2F_VERSION_BYTES = "U2F_V2".getBytes();
     public static final byte[] U2F_EMPTY = new byte[0];
 
-    public static void main(String[] args) {
-
-    }
-
-    public static void p(Object o) {
-        System.out.println(o);
-    }
 }

@@ -13,6 +13,9 @@ import java.security.cert.CertificateEncodingException;
 import java.util.HashMap;
 
 import static com.presseverykey.u2f.Util.p;
+import static de.kuriositaet.util.crypto.Hash.sha256;
+import static de.kuriositaet.util.crypto.Random.random;
+import static de.kuriositaet.util.crypto.Util.b2h;
 
 /**
  * Created by a2800276 on 2015-10-29.
@@ -49,7 +52,7 @@ public class SimpleKeystoreDevice extends SimpleDevice {
         } catch (Throwable t) {
             throw new RuntimeException(t);
         } finally {
-            Util.closeInputStream(ois);
+            Util.close(ois);
         }
 
         return map;
@@ -64,7 +67,7 @@ public class SimpleKeystoreDevice extends SimpleDevice {
         } catch (IOException e) {
             throw new RuntimeException(e);
         } finally {
-            Util.closeOutputStream(oos);
+            Util.close(oos);
         }
 
     }
@@ -79,7 +82,7 @@ public class SimpleKeystoreDevice extends SimpleDevice {
                 fis = new java.io.FileInputStream(this.keystoreFn);
                 ks.load(fis, this.keystorePw);
             } finally {
-                Util.closeInputStream(fis);
+                Util.close(fis);
             }
         } catch (Throwable t) {
             throw new RuntimeException(t);
@@ -96,7 +99,7 @@ public class SimpleKeystoreDevice extends SimpleDevice {
         } catch (Throwable e) {
             throw new RuntimeException(e);
         } finally {
-            Util.closeOutputStream(fos);
+            Util.close(fos);
         }
     }
 
@@ -167,8 +170,8 @@ public class SimpleKeystoreDevice extends SimpleDevice {
 
 
     String keyStoreAlias(byte[] applicationParameter, byte[] keyHandle) {
-        byte[] alias_bytes = Util.sha256(applicationParameter, keyHandle);
-        return Util.bytes2Hex(alias_bytes);
+        byte[] alias_bytes = sha256(applicationParameter, keyHandle);
+        return b2h(alias_bytes);
     }
 
     Certificate attestationCertificate() {
@@ -209,7 +212,7 @@ public class SimpleKeystoreDevice extends SimpleDevice {
 
         Util.p("First Authentication");
         U2F.AuthenticationRequestMessage areq = new U2F.AuthenticationRequestMessage(
-                Util.random(32),
+                random(32),
                 req.getApplicationParameter(),
                 resp.getKeyHandle()
         );
@@ -218,7 +221,7 @@ public class SimpleKeystoreDevice extends SimpleDevice {
 
         Util.p("Second Authentication");
         areq = new U2F.AuthenticationRequestMessage(
-                Util.random(32),
+                random(32),
                 req.getApplicationParameter(),
                 resp.getKeyHandle()
         );

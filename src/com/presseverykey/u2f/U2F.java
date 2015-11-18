@@ -1,12 +1,14 @@
 package com.presseverykey.u2f;
 
+import static de.kuriositaet.util.crypto.Util.b2h;
+
 /**
  * Created by a2800276 on 2015-10-29.
  */
 public class U2F {
     public static class RegistrationRequestMessage {
         public RegistrationRequestMessage(byte[] bytes) {
-            if (bytes.length != 64) {
+            if (bytes == null || bytes.length != 64) {
                 throw new U2FException("incorrect length");
             }
             setChallengeParameter(new byte[32]);
@@ -84,22 +86,33 @@ public class U2F {
         public void setKeyHandle(byte[] keyHandle) {
             this.keyHandle = keyHandle;
         }
+
+        public byte[] toBytes() {
+            int len = 64 + 1 + this.keyHandle.length;
+            byte[] bs = new byte[len];
+            System.arraycopy(this.getChallengeParameter(), 0, bs, 0, 32);
+            System.arraycopy(this.getApplicationParameter(), 0, bs, 32, 32);
+            bs[64] = (byte) this.getKeyHandle().length;
+            System.arraycopy(this.getKeyHandle(), 0, bs, 65, this.getKeyHandle().length);
+            return bs;
+        }
     }
 
     public static class RegistrationResponseMessage {
+        private static final int PK_LEN = 65;
         private byte[] userPK;
         private byte[] keyHandle;
         private byte[] attestationCert;
         private byte[] signature;
 
         public byte[] toBytes() {
-            int len = 1 + 65 + 1 + getKeyHandle().length + getAttestationCert().length + getSignature().length;
+            int len = 1 + PK_LEN + 1 + getKeyHandle().length + getAttestationCert().length + getSignature().length;
             int pos = 0;
             byte[] bytes = new byte[len];
             bytes[pos] = 0x05;
             pos += 1;
-            System.arraycopy(getUserPK(), 0, bytes, pos, 65);
-            pos += 65;
+            System.arraycopy(getUserPK(), 0, bytes, pos, PK_LEN);
+            pos += PK_LEN;
             bytes[pos] = (byte) getKeyHandle().length;
             pos += 1;
             System.arraycopy(getKeyHandle(), 0, bytes, pos, getKeyHandle().length);
@@ -113,16 +126,16 @@ public class U2F {
         public String toString() {
             StringBuilder builder = new StringBuilder();
             builder.append("userPK:");
-            builder.append(Util.bytes2Hex(getUserPK()));
+            builder.append(b2h(getUserPK()));
             builder.append("\n");
             builder.append("keyHandle:");
-            builder.append(Util.bytes2Hex(getKeyHandle()));
+            builder.append(b2h(getKeyHandle()));
             builder.append("\n");
             builder.append("attestationCert:");
-            builder.append(Util.bytes2Hex(getAttestationCert()));
+            builder.append(b2h(getAttestationCert()));
             builder.append("\n");
             builder.append("signature:");
-            builder.append(Util.bytes2Hex(getSignature()));
+            builder.append(b2h(getSignature()));
             builder.append("\n");
             return builder.toString();
         }
@@ -132,6 +145,9 @@ public class U2F {
         }
 
         public void setUserPK(byte[] userPK) {
+            if (userPK == null || userPK.length != PK_LEN) {
+                throw new U2FException("invalid pk");
+            }
             this.userPK = userPK;
         }
 
@@ -166,7 +182,7 @@ public class U2F {
         byte[] signature;
 
         public byte[] toBytes() {
-            int len = 1 + 4 + 32;
+            int len = 1 + 4 + signature.length;
             byte[] bytes = new byte[len];
             bytes[0] = userPresence;
             System.arraycopy(counter, 0, bytes, 1, 4);
@@ -179,8 +195,8 @@ public class U2F {
             builder.append("userPresence: ");
             builder.append(userPresence);
             builder.append("\n");
-            builder.append("counter: " + Util.bytes2Hex(counter) + "\n");
-            builder.append("signature: " + Util.bytes2Hex(signature) + "\n");
+            builder.append("counter: " + b2h(counter) + "\n");
+            builder.append("signature: " + b2h(signature) + "\n");
             return builder.toString();
         }
     }
