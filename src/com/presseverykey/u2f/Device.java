@@ -100,7 +100,7 @@ public abstract class Device {
                 response.getUserPK()
         );
         de.kuriositaet.util.crypto.KeyPair.PrivateKey privateKey =
-                new de.kuriositaet.util.crypto.KeyPair.PrivateKey(pair.getPrivate());
+                new de.kuriositaet.util.crypto.KeyPair.PrivateKey(attestationPrivateKey());
 
         response.setSignature(privateKey.sign(Hash.Algorithm.SHA256, signData));
 
