@@ -149,8 +149,8 @@ public class SimpleKeystoreDevice extends SimpleDevice {
     }
 
     @Override
-    protected long getCounter(byte[] applicationParameter, byte[] keyHandle) {
-        String alias = keyStoreAlias(applicationParameter, keyHandle);
+    protected long getCounter(U2F.AuthenticationRequestMessage req) {
+        String alias = keyStoreAlias(req.getApplicationParameter(), req.getKeyHandle());
         if (!this.counters.containsKey(alias)) {
             // this is a RuntimeException and not
             // a NoKeyException because the fact we ended up here indicates

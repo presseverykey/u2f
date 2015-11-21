@@ -19,6 +19,17 @@ public class U2F {
 
         }
 
+        public RegistrationRequestMessage(byte[] challengeParameter, byte[] applicationParameter) {
+            if (challengeParameter == null || applicationParameter == null) {
+                throw new NullPointerException("null not allowed");
+            }
+            if (challengeParameter.length != 32 || applicationParameter.length != 32) {
+                throw new U2FException("incorrect length");
+            }
+            setChallengeParameter(challengeParameter);
+            setApplicationParameter(applicationParameter);
+        }
+
         private byte[] challengeParameter;
         private byte[] applicationParameter;
 

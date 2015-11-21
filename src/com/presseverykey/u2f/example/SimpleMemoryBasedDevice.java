@@ -68,8 +68,8 @@ public class SimpleMemoryBasedDevice extends SimpleDevice {
     }
 
     @Override
-    protected long getCounter(byte[] applicationParameter, byte[] keyHandle) {
-        String alias = alias(applicationParameter, keyHandle);
+    protected long getCounter(U2F.AuthenticationRequestMessage requestMessage) {
+        String alias = alias(requestMessage.getApplicationParameter(), requestMessage.getKeyHandle());
         if (!this.registrations.containsKey(alias)) {
             throw new U2F.U2FNoKeyException();
         }

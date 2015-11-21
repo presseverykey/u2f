@@ -1,6 +1,7 @@
 package com.presseverykey.u2f.example;
 
 import com.presseverykey.u2f.Device;
+import com.presseverykey.u2f.U2F;
 import de.kuriositaet.util.crypto.KeyPair;
 
 import static de.kuriositaet.util.crypto.Random.random;
@@ -15,7 +16,7 @@ public abstract class SimpleDevice extends Device {
     }
 
     @Override
-    protected java.security.KeyPair generateP256KeyPair() {
+    protected java.security.KeyPair generateP256KeyPair(U2F.RegistrationRequestMessage req) {
         KeyPair pair = KeyPair.generateKeyPair(KeyPair.Algorithm.P256);
         return pair.getJCAKeyPair();
     }

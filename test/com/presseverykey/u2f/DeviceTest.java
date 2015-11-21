@@ -15,59 +15,65 @@ import static org.testng.Assert.assertTrue;
  * Created by a2800276 on 2015-11-10.
  */
 public class DeviceTest {
+    /**
+     * Base Dummy implementation for Device, so tests only need to override the methods they are acutally interested in.
+     */
+    class DeviceBase extends Device {
+
+        @Override
+        protected byte[] generateKeyHandle(KeyPair pair) {
+            return new byte[0];
+        }
+
+        @Override
+        protected PrivateKey attestationPrivateKey() {
+            return null;
+        }
+
+        @Override
+        protected byte[] attestationCertificateX509Bytes() {
+            return new byte[0];
+        }
+
+        @Override
+        protected void storeKeyForApplicationAndHandle(KeyPair pair, byte[] applicationParameter, byte[] keyhandle) {
+
+        }
+
+        @Override
+        protected KeyPair generateP256KeyPair(U2F.RegistrationRequestMessage req) {
+            return null;
+        }
+
+        @Override
+        protected boolean hasKeyForApplicationAndHandle(U2F.AuthenticationRequestMessage req) {
+            return false;
+        }
+
+        @Override
+        protected PrivateKey userPrivateKey(U2F.AuthenticationRequestMessage req) throws U2F.U2FNoKeyException {
+            return null;
+        }
+
+        @Override
+        protected long getCounter(U2F.AuthenticationRequestMessage req) {
+            return 0;
+        }
+
+        @Override
+        protected boolean testUserPresence() {
+            return false;
+        }
+    }
+
     static byte[] EMPTY = {};
     static byte[] ZERO = {0, 0, 0, 0};
-    static byte[] FF_ZERO = {(byte) 0xf0, 0, 0, 0x0f};
+    static byte[] F_ZERO_F = {(byte) 0xf0, 0, 0, 0x0f};
     static byte[] ONETWOETC = {1, 2, 3, 4};
 
     @Test
     public void testHandleAPDU() throws Exception {
-        Device testDevice = new Device() {
-            @Override
-            protected byte[] generateKeyHandle(KeyPair pair) {
-                return new byte[0];
-            }
-
-            @Override
-            protected PrivateKey attestationPrivateKey() {
-                return null;
-            }
-
-            @Override
-            protected byte[] attestationCertificateX509Bytes() {
-                return new byte[0];
-            }
-
-            @Override
-            protected void storeKeyForApplicationAndHandle(KeyPair pair, byte[] applicationParameter, byte[] keyhandle) {
-
-            }
-
-            @Override
-            protected KeyPair generateP256KeyPair() {
-                return null;
-            }
-
-            @Override
-            protected boolean hasKeyForApplicationAndHandle(U2F.AuthenticationRequestMessage req) {
-                return false;
-            }
-
-            @Override
-            protected PrivateKey userPrivateKey(U2F.AuthenticationRequestMessage req) {
-                return null;
-            }
-
-            @Override
-            protected long getCounter(byte[] applicationParameter, byte[] keyHandle) {
-                return 0;
-            }
-
-            @Override
-            protected boolean testUserPresence() {
-                return false;
-            }
-        };
+        Device testDevice = new DeviceBase();
         APDU apdu = new APDU();
         apdu.cla = Constants.U2F_CLASS + 1;
         for (byte b = Byte.MIN_VALUE; ; ++b) {
@@ -123,8 +129,8 @@ public class DeviceTest {
             public KeyPair keypair;
 
             @Override
-            protected KeyPair generateP256KeyPair() {
-                this.keypair = super.generateP256KeyPair();
+            protected KeyPair generateP256KeyPair(U2F.RegistrationRequestMessage req) {
+                this.keypair = super.generateP256KeyPair(req);
                 return this.keypair;
             }
 
@@ -168,7 +174,7 @@ public class DeviceTest {
             }
 
             @Override
-            protected long getCounter(byte[] applicationParameter, byte[] keyHandle) {
+            protected long getCounter(U2F.AuthenticationRequestMessage req) {
                 return 0;
             }
         };
@@ -214,15 +220,15 @@ public class DeviceTest {
             protected PrivateKey userPrivateKey(U2F.AuthenticationRequestMessage req) {
                 assertEquals(req, this.req);
                 if (req.getKeyHandle() == keyhandle_valid || req.getKeyHandle() == keyhandle_user_presence) {
-                    return this.generateP256KeyPair().getPrivate();
+                    //make one up.
+                    return this.generateP256KeyPair(null).getPrivate();
                 }
                 return null;
             }
 
             @Override
-            protected long getCounter(byte[] applicationParameter, byte[] keyHandle) {
-                assertEquals(applicationParameter, this.req.getApplicationParameter());
-                assertEquals(keyHandle, this.req.getKeyHandle());
+            protected long getCounter(U2F.AuthenticationRequestMessage req) {
+                assertEquals(req, this.req);
                 return 0;
             }
 
@@ -272,25 +278,25 @@ public class DeviceTest {
         final Wrap counter = new Wrap();
         Device d = new SimpleMemoryBasedDevice() {
             @Override
-            protected long getCounter(byte[] applicationParameter, byte[] keyHandle) {
+            protected long getCounter(U2F.AuthenticationRequestMessage r) {
                 return counter.counter;
             }
         };
         counter.counter = 0L;
-        assertEquals(d.getCounterBytes(ZERO, ZERO), ZERO);
+        assertEquals(d.getCounterBytes(null), ZERO);
         counter.counter = 0x01020304;
-        assertEquals(d.getCounterBytes(ZERO, ZERO), ONETWOETC);
+        assertEquals(d.getCounterBytes(null), ONETWOETC);
         counter.counter = 0xf000000fL;
-        assertEquals(d.getCounterBytes(ZERO, ZERO), FF_ZERO);
+        assertEquals(d.getCounterBytes(null), F_ZERO_F);
         counter.counter = Long.MAX_VALUE;
         try {
-            d.getCounterBytes(ZERO, ZERO);
+            d.getCounterBytes(null);
         } catch (Throwable t) {
             assertEquals(t.getClass(), IllegalArgumentException.class);
         }
         counter.counter = Long.MIN_VALUE;
         try {
-            d.getCounterBytes(ZERO, ZERO);
+            d.getCounterBytes(null);
         } catch (Throwable t) {
             assertEquals(t.getClass(), IllegalArgumentException.class);
         }

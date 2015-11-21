@@ -80,8 +80,8 @@ public abstract class Device {
         return apduResponse(resp.toBytes(), Constants.U2F_SW_NO_ERROR);
     }
 
-    public U2F.RegistrationResponseMessage generateRegistrationResponse(U2F.RegistrationRequestMessage req) {
-        KeyPair pair = generateP256KeyPair();
+    public synchronized U2F.RegistrationResponseMessage generateRegistrationResponse(U2F.RegistrationRequestMessage req) {
+        KeyPair pair = generateP256KeyPair(req);
         byte[] keyhandle = generateKeyHandle(pair);
         storeKeyForApplicationAndHandle(pair, req.getApplicationParameter(), keyhandle);
         U2F.RegistrationResponseMessage response = new U2F.RegistrationResponseMessage();
@@ -178,8 +178,9 @@ public abstract class Device {
      * Generate a P-256 Keypair. Assume this keypair will be used as the user key.
      *
      * @return
+     * @param req
      */
-    protected abstract KeyPair generateP256KeyPair();
+    protected abstract KeyPair generateP256KeyPair(U2F.RegistrationRequestMessage req);
 
 
     /**
@@ -218,7 +219,7 @@ public abstract class Device {
      */
     protected abstract boolean hasKeyForApplicationAndHandle(U2F.AuthenticationRequestMessage req);
 
-    public U2F.AuthenticationResponseMessage generateAuthenticationResponse(U2F.AuthenticationRequestMessage req)
+    public synchronized U2F.AuthenticationResponseMessage generateAuthenticationResponse(U2F.AuthenticationRequestMessage req)
             throws U2F.U2FNoKeyException, U2F.U2FUserPresenceException {
         if (!hasKeyForApplicationAndHandle(req)) {
             throw new U2F.U2FNoKeyException();
@@ -229,7 +230,7 @@ public abstract class Device {
 
         U2F.AuthenticationResponseMessage resp = new U2F.AuthenticationResponseMessage();
         resp.userPresence = 0x01;
-        resp.counter = getCounterBytes(req.getApplicationParameter(), req.getKeyHandle());
+        resp.counter = getCounterBytes(req);
 
         byte[] signatureData = signatureDataAuthentication(
                 req.getApplicationParameter(),
@@ -250,8 +251,10 @@ public abstract class Device {
 
         return resp;
     }
-    protected byte[] getCounterBytes(byte[] applicationParameter, byte[] keyHandle) {
-        long counter = getCounter(applicationParameter, keyHandle);
+
+    protected byte[] getCounterBytes(U2F.AuthenticationRequestMessage req) {
+
+        long counter = getCounter(req);
 
         if (counter > 0xffffffffL || counter < 0) {
             throw new IllegalArgumentException("counter value too large or negative");
@@ -293,7 +296,10 @@ public abstract class Device {
         return bytes;
     }
 
-    protected abstract long getCounter(byte[] applicationParameter, byte[] keyHandle);
+    /**
+     * get the current (incremented) counter for the keyhandle and application parameter
+     **/
+    protected abstract long getCounter(U2F.AuthenticationRequestMessage req);
 
 
     /**
