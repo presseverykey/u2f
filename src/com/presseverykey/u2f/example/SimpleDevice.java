@@ -2,9 +2,9 @@ package com.presseverykey.u2f.example;
 
 import com.presseverykey.u2f.Device;
 import com.presseverykey.u2f.U2F;
-import de.kuriositaet.util.crypto.KeyPair;
+import util.crypto.KeyPair;
 
-import static de.kuriositaet.util.crypto.Random.random;
+import static util.crypto.Random.random;
 
 /**
  * Created by a2800276 on 2015-10-30.

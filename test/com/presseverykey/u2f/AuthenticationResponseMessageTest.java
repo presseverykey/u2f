@@ -2,8 +2,8 @@ package com.presseverykey.u2f;
 
 import org.testng.annotations.Test;
 
-import static de.kuriositaet.util.crypto.Random.random;
 import static org.testng.Assert.assertEquals;
+import static util.crypto.Random.random;
 
 /**
  * Created by a2800276 on 2015-11-18.

@@ -7,9 +7,9 @@ import org.testng.annotations.Test;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 
-import static de.kuriositaet.util.crypto.Random.random;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
+import static util.crypto.Random.random;
 
 /**
  * Created by a2800276 on 2015-11-10.

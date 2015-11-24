@@ -1,7 +1,7 @@
 package com.presseverykey.u2f;
 
 
-import de.kuriositaet.util.crypto.Hash;
+import util.crypto.Hash;
 
 import java.security.KeyPair;
 import java.security.PrivateKey;
@@ -87,8 +87,8 @@ public abstract class Device {
         U2F.RegistrationResponseMessage response = new U2F.RegistrationResponseMessage();
 
         //response.setUserPK(pair.getPublic().getEncoded());
-        de.kuriositaet.util.crypto.KeyPair.ECPublicKey publicKey =
-                new de.kuriositaet.util.crypto.KeyPair.ECPublicKey((ECPublicKey) pair.getPublic());
+        util.crypto.KeyPair.ECPublicKey publicKey =
+                new util.crypto.KeyPair.ECPublicKey((ECPublicKey) pair.getPublic());
         response.setUserPK(publicKey.toUncompressedCurvePoint());
         response.setKeyHandle(keyhandle);
         response.setAttestationCert(attestationCertificateX509Bytes());
@@ -99,10 +99,10 @@ public abstract class Device {
                 keyhandle,
                 response.getUserPK()
         );
-        de.kuriositaet.util.crypto.KeyPair.PrivateKey privateKey =
-                new de.kuriositaet.util.crypto.KeyPair.PrivateKey(attestationPrivateKey());
+        util.crypto.KeyPair.PrivateKey privateKey =
+                new util.crypto.KeyPair.PrivateKey(attestationPrivateKey());
 
-        response.setSignature(privateKey.sign(Hash.Algorithm.SHA256, signData));
+        response.setSignature(privateKey.sign(util.crypto.Hash.Algorithm.SHA256, signData));
 
         return response;
     }
@@ -244,8 +244,8 @@ public abstract class Device {
             throw new U2F.U2FNoKeyException();
         }
 
-        de.kuriositaet.util.crypto.KeyPair.PrivateKey privateKey = new
-                de.kuriositaet.util.crypto.KeyPair.PrivateKey(userPrivateKey(req));
+        util.crypto.KeyPair.PrivateKey privateKey = new
+                util.crypto.KeyPair.PrivateKey(userPrivateKey(req));
 
         resp.signature = privateKey.sign(Hash.Algorithm.SHA256, signatureData);
 

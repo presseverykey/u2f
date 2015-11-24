@@ -13,9 +13,9 @@ import java.security.cert.CertificateEncodingException;
 import java.util.HashMap;
 
 import static com.presseverykey.u2f.Util.p;
-import static de.kuriositaet.util.crypto.Hash.sha256;
-import static de.kuriositaet.util.crypto.Random.random;
-import static de.kuriositaet.util.crypto.Util.b2h;
+import static util.bytes.Bytes.b2h;
+import static util.crypto.Hash.sha256;
+import static util.crypto.Random.random;
 
 /**
  * Created by a2800276 on 2015-10-29.

@@ -8,9 +8,9 @@ import java.security.PrivateKey;
 import java.util.HashMap;
 
 import static com.presseverykey.u2f.Util.p;
-import static de.kuriositaet.util.crypto.Hash.sha256;
-import static de.kuriositaet.util.crypto.Random.random;
-import static de.kuriositaet.util.crypto.Util.b2h;
+import static util.bytes.Bytes.b2h;
+import static util.crypto.Hash.sha256;
+import static util.crypto.Random.random;
 
 /**
  * Created by a2800276 on 2015-10-30.
@@ -37,7 +37,7 @@ public class SimpleMemoryBasedDevice extends SimpleDevice {
     @Override
     protected PrivateKey attestationPrivateKey() {
         byte[] pkBytes = Base64.decode(ATTESTATION_PK);
-        return de.kuriositaet.util.crypto.KeyPair.PrivateKey.loadPKCS8(pkBytes).getJCAPrivateKey();
+        return util.crypto.KeyPair.PrivateKey.loadPKCS8(pkBytes).getJCAPrivateKey();
     }
 
     private static final String ATTESTATION_CERT_X509_B64 = "MIICBTCCAamgAwIBAgIEcHKfOzAMBggqhkjOPQQDAgUAMHcxCzAJBgNVBAYTAkRFMQwwCgYDVQQIEwNOUlcxDjAMBgNVBAcTBUtvZWxuMRswGQYDVQQKExJQcmVzcyBFdmVyeSBLZXkgVUcxGDAWBgNVBAsTD1RlY2huaWNhbCBTdGFmZjETMBEGA1UEAxMKVGltIEJlY2tlcjAeFw0xNTEwMjkyMjI5MjZaFw0xNjAxMjcyMjI5MjZaMHcxCzAJBgNVBAYTAkRFMQwwCgYDVQQIEwNOUlcxDjAMBgNVBAcTBUtvZWxuMRswGQYDVQQKExJQcmVzcyBFdmVyeSBLZXkgVUcxGDAWBgNVBAsTD1RlY2huaWNhbCBTdGFmZjETMBEGA1UEAxMKVGltIEJlY2tlcjBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABGwjwmlUzwcNi2Acpw8+VHl2xpJ8pwaQAqGV3hOBG94PryngxqVGXzRuq2vIiOqgeMGTVNhHm+4WvLD7ScclrnWjITAfMB0GA1UdDgQWBBRQRvI1usBfwqofbUxwtapBcF5rjzAMBggqhkjOPQQDAgUAA0gAMEUCIQCYygGTgIqRnCNXigPqOb+xDIZrfkTNU34yQAV/KOdXywIgVNg7hGvjQ1abSqtSf4IuCCz3bPp4jcvfCAmrey48wkc=";
