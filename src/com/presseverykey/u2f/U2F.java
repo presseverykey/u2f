@@ -1,6 +1,6 @@
 package com.presseverykey.u2f;
 
-import static de.kuriositaet.util.crypto.Util.b2h;
+import static util.bytes.Bytes.b2h;
 
 /**
  * Created by a2800276 on 2015-10-29.
@@ -136,18 +136,18 @@ public class U2F {
 
         public String toString() {
             StringBuilder builder = new StringBuilder();
-            builder.append("userPK:");
-            builder.append(b2h(getUserPK()));
-            builder.append("\n");
-            builder.append("keyHandle:");
-            builder.append(b2h(getKeyHandle()));
-            builder.append("\n");
-            builder.append("attestationCert:");
-            builder.append(b2h(getAttestationCert()));
-            builder.append("\n");
-            builder.append("signature:");
-            builder.append(b2h(getSignature()));
-            builder.append("\n");
+			builder.append("userPK (" + getUserPK().length + "):");
+			builder.append(b2h(getUserPK()));
+			builder.append("\n");
+			builder.append("keyHandle (" + getKeyHandle().length + "):");
+			builder.append(b2h(getKeyHandle()));
+			builder.append("\n");
+			builder.append("attestationCert (" + getAttestationCert().length + "):");
+			builder.append(b2h(getAttestationCert()));
+			builder.append("\n");
+			builder.append("signature (" + getSignature().length + "):");
+			builder.append(b2h(getSignature()));
+			builder.append("\n");
             return builder.toString();
         }
 
@@ -167,8 +167,12 @@ public class U2F {
         }
 
         public void setKeyHandle(byte[] keyHandle) {
-            this.keyHandle = keyHandle;
-        }
+			// spec says 0-255, though 0 doesn't make sense ...
+			if (keyHandle == null || keyHandle.length < 0 || keyHandle.length > 255) {
+				throw new U2FException("invalid keyhandle");
+			}
+			this.keyHandle = keyHandle;
+		}
 
         public byte[] getAttestationCert() {
             return attestationCert;
