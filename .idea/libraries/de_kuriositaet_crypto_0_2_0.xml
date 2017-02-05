@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="de.kuriositaet:crypto:0.2.0" type="repository">
+    <properties maven-id="de.kuriositaet:crypto:0.2.0" />
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/de/kuriositaet/crypto/0.2.0/crypto-0.2.0.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/de/kuriositaet/io/0.2.0/io-0.2.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

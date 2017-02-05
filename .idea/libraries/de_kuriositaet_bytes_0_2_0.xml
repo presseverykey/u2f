@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="de.kuriositaet:bytes:0.2.0" type="repository">
+    <properties maven-id="de.kuriositaet:bytes:0.2.0" />
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/de/kuriositaet/bytes/0.2.0/bytes-0.2.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

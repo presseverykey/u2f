@@ -137,7 +137,7 @@ public abstract class Device {
 
     /**
      * In case the concrete implementation wraps the PK in the keyhandle (see
-     * Fido Raw Messages §4.3) this method may be implemented to generate the
+     * Fido Raw Messages &sect;4.3) this method may be implemented to generate the
      * wrapped value to use as keyhandle. Otherwise, the keyHandle is an opaque
      * byte value used as a lookup.
      *

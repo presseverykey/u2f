@@ -1,0 +1,31 @@
+{
+   "groupId"            : "com.presseverykey"
+  ,"artifactId"         : "u2f"
+  ,"version"            : "0.1.0"
+  ,"projectName"        : "u2f-client"
+  ,"description"        : "library for u2f client implementations"
+  ,"url"                : "https://github.com/presseverykey/u2f"
+  ,"licenseName"        : "2 Clause BSD"
+  ,"licenseURL"         : "https://opensource.org/licenses/BSD-2-Clause"
+  ,"scmURL"             : "https://github.com/presseverykey/u2f"
+  ,"developerName"      : "Tim Becker"
+  ,"developerEmail"     : "tim@presseverykey.com"
+  ,"developerURL"       : "http://www.presseverykey.com"
+  ,"developerId"        : "a2800276"
+  ,"dependencies"       : [
+     {
+        "groupId"    : "de.kuriositaet"
+       ,"artifactId" : "bytes"
+       ,"version"    : "[0.2.0,)"
+     }
+    ,{
+        "groupId"    : "de.kuriositaet"
+       ,"artifactId" : "crypto"
+       ,"version"    : "[0.2.0,)"
+    }
+  ]
+
+  ,"sources"            : ["src"]
+  ,"classes"            : ["out/production/u2f"]
+  ,"output"             : "artifacts"
+}

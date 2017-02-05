@@ -3,7 +3,6 @@
     <output-path>$PROJECT_DIR$/out/artifacts/u2f_jar</output-path>
     <root id="archive" name="u2f.jar">
       <element id="module-output" name="u2f" />
-      <element id="library" level="project" name="crypto" />
     </root>
   </artifact>
 </component>

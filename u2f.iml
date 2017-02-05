@@ -17,7 +17,7 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" name="crypto" level="project" />
-    <orderEntry type="library" name="util" level="project" />
+    <orderEntry type="library" name="de.kuriositaet:bytes:0.2.0" level="project" />
+    <orderEntry type="library" name="de.kuriositaet:crypto:0.2.0" level="project" />
   </component>
 </module>

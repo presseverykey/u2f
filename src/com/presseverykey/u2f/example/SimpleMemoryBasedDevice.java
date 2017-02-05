@@ -2,6 +2,7 @@ package com.presseverykey.u2f.example;
 
 import com.presseverykey.u2f.Device;
 import com.presseverykey.u2f.U2F;
+import util.bytes.base64.Base64;
 
 import java.security.KeyPair;
 import java.security.PrivateKey;
